@@ -1,90 +1,80 @@
 module.exports = {
- config: {
- name: "pending",
- version: "1.0",
- author: "MASTERMIND X ROCKY",
- countDown: 5,
- role: 2,
- shortDescription: {
- vi: "",
- en: ""
- },
- longDescription: {
- vi: "",
- en: ""
- },
- category: "owner"
- },
+	config: {
+		name: "approve",
+		aliases: ["pending", "pend", "pe"],
+		version: "2.0.0",
+		author: "SIFAT",
+		countDown: 5,
+		role: 2,
+		description: { en: "ᴀᴘᴘʀᴏᴠᴇ ᴏʀ ʀᴇᴊᴇᴄᴛ ᴘᴇɴᴅɪɴɢ ʀᴇǫᴜᴇꜱᴛꜱ" },
+		category: "owner",
+		guide: { en: "{pn} user | thread | all — ʟɪꜱᴛ ᴘᴇɴᴅɪɴɢ\n{pn} reject <ɴᴜᴍ> — ʀᴇᴊᴇᴄᴛ ꜱᴘᴇᴄɪꜰɪᴄ" }
+	},
 
-langs: {
- en: {
- invaildNumber: "%1 is not an invalid number",
- cancelSuccess: "Refused %1 thread!",
- approveSuccess: "Approved successfully %1 threads!",
+	onReply: async function ({ message, api, event, Reply }) {
+		const { author, pending, messageID } = Reply;
+		if (String(event.senderID) !== String(author)) return;
+		const body = event.body.trim().toLowerCase();
+		if (body === "c") {
+			api.unsendMessage(messageID);
+			return message.reply("⌀ ᴏᴘᴇʀᴀᴛɪᴏɴ ᴄᴀɴᴄᴇʟʟᴇᴅ");
+		}
 
- cantGetPendingList: "Can't get the pending list!",
- returnListPending: "»「PENDING」«❮ The whole number of threads to approve is: %1 thread ❯\n\n%2",
- returnListClean: "「PENDING」There is no thread in the pending list"
- }
- },
+		const isReject = body.startsWith("r ");
+		const numPart = isReject ? body.slice(2) : body;
+		const indexes = numPart.split(/\s+/).map(Number).filter(n => !isNaN(n));
+		if (!indexes.length) return message.reply("⌀ ɪɴᴠᴀʟɪᴅ ɪɴᴘᴜᴛ");
 
-onReply: async function({ api, event, Reply, getLang, commandName, prefix }) {
- if (String(event.senderID) !== String(Reply.author)) return;
- const { body, threadID, messageID } = event;
- var count = 0;
+		const prefix = global.GoatBot.config.prefix || ".";
+		let count = 0;
+		for (const idx of indexes) {
+			if (idx <= 0 || idx > pending.length) continue;
+			const target = pending[idx - 1];
+			try {
+				if (isReject) {
+					await api.sendMessage("⌀ ʏᴏᴜʀ ʀᴇǫᴜᴇꜱᴛ ᴡᴀꜱ ʀᴇᴊᴇᴄᴛᴇᴅ", target.threadID);
+				} else {
+					await api.sendMessage(
+						`✦ ʏᴏᴜʀ ʀᴇǫᴜᴇꜱᴛ ʜᴀꜱ ʙᴇᴇɴ ᴀᴘᴘʀᴏᴠᴇᴅ\n◈ ᴛʏᴘᴇ ${prefix}help ꜰᴏʀ ᴄᴏᴍᴍᴀɴᴅꜱ`,
+						target.threadID
+					);
+					await api.changeNickname(`${global.GoatBot.config.nickNameBot || "MARIN 👺"}`, target.threadID, api.getCurrentUserID());
+				}
+				count++;
+			} catch { count++; }
+		}
 
- if (isNaN(body) && body.indexOf("c") == 0 || body.indexOf("cancel") == 0) {
- const index = (body.slice(1, body.length)).split(/\s+/);
- for (const ArYanIndex of index) {
- console.log(ArYanIndex);
- if (isNaN(ArYanIndex) || ArYanIndex <= 0 || ArYanIndex > Reply.pending.length) return api.sendMessage(getLang("invaildNumber", ArYanIndex), threadID, messageID);
- api.removeUserFromGroup(api.getCurrentUserID(), Reply.pending[ArYanIndex - 1].threadID);
- count+=1;
- }
- return api.sendMessage(getLang("cancelSuccess", count), threadID, messageID);
- }
- else {
- const index = body.split(/\s+/);
- for (const ArYanIndex of index) {
- if (isNaN(ArYanIndex) || ArYanIndex <= 0 || ArYanIndex > Reply.pending.length) return api.sendMessage(getLang("invaildNumber", ArYanIndex), threadID, messageID);
- api.sendMessage(`💞⪼ MCF OWNER ROCKY⪻🌝
-╭──────────────⭓
-│‣ 𝐆𝐥𝐨𝐛𝐚𝐥 𝐩𝐫𝐞𝐟𝐢𝐱: . 
-│‣ 𝐘𝐨𝐮𝐫 𝐠𝐫𝐨𝐮𝐩 𝐩𝐫𝐞𝐟𝐢𝐱: check using prefix cmd
-╰──────────────⭓
-╭──────────────⭓
-│➜ 𝐎𝐭𝐡𝐞𝐫 𝐃𝐞𝐭𝐚𝐢𝐥𝐬🥰
-│Owner : 𝐑𝐎𝐂𝐊𝐘 𝐂𝐇𝐎𝐖𝐃𝐇𝐔𝐑𝐘
-│FB : m.me/mCf.cYber.ForCes.Rocky.404
-╰──────────────⭓`, Reply.pending[ArYanIndex - 1].threadID);
- count+=1;
- }
- return api.sendMessage(getLang("approveSuccess", count), threadID, messageID);
- }
-},
+		const action = isReject ? "ʀᴇᴊᴇᴄᴛᴇᴅ" : "ᴀᴘᴘʀᴏᴠᴇᴅ";
+		return message.reply(`✦ ${action} ${count} ᴇɴᴛʀ${count > 1 ? "ɪᴇꜱ" : "ʏ"}`);
+	},
 
-onStart: async function({ api, event, getLang, commandName }) {
- const { threadID, messageID } = event;
+	onStart: async function ({ message, api, event, args, usersData }) {
+		const { threadID, messageID } = event;
+		const type = (args[0] || "").toLowerCase();
 
- var msg = "", index = 1;
+		if (!type || !["user", "thread", "all", "u", "t", "a"].includes(type))
+			return message.reply("◈ ᴜꜱᴀɢᴇ:\n◦ approve user\n◦ approve thread\n◦ approve all\n◈ ʀᴇᴘʟʏ ɴᴜᴍꜱ ᴛᴏ ᴀᴘᴘʀᴏᴠᴇ\n◈ ʀᴇᴘʟʏ r <ɴᴜᴍ> ᴛᴏ ʀᴇᴊᴇᴄᴛ");
 
- try {
- var spam = await api.getThreadList(100, null, ["OTHER"]) || [];
- var pending = await api.getThreadList(100, null, ["PENDING"]) || [];
- } catch (e) { return api.sendMessage(getLang("cantGetPendingList"), threadID, messageID) }
+		try {
+			const spam = (await api.getThreadList(100, null, ["OTHER"])) || [];
+			const pend = (await api.getThreadList(100, null, ["PENDING"])) || [];
+			const list = [...spam, ...pend];
+			let filteredList = type.startsWith("u") ? list.filter(t => !t.isGroup) : type.startsWith("t") ? list.filter(t => t.isGroup) : list;
+			if (!filteredList.length) return message.reply("⌀ ɴᴏ ᴘᴇɴᴅɪɴɢ ʀᴇǫᴜᴇꜱᴛꜱ");
 
- const list = [...spam, ...pending].filter(group => group.isSubscribed && group.isGroup);
+			let msg = "✦ ᴘᴇɴᴅɪɴɢ ʀᴇǫᴜᴇꜱᴛꜱ:\n";
+			for (let i = 0; i < filteredList.length; i++) {
+				const name = filteredList[i].name || (await usersData.getName(filteredList[i].threadID).catch(() => "ᴜɴᴋɴᴏᴡɴ")) || "ᴜɴᴋɴᴏᴡɴ";
+				const tag = filteredList[i].isGroup ? "👥" : "👤";
+				msg += `◦ ${i + 1}. ${tag} ${name}\n`;
+			}
+			msg += "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\n◈ ʀᴇᴘʟʏ ɴᴜᴍꜱ ᴛᴏ ᴀᴘᴘʀᴏᴠᴇ\n◈ ʀᴇᴘʟʏ r <ɴᴜᴍ> ᴛᴏ ʀᴇᴊᴇᴄᴛ\n◈ ʀᴇᴘʟʏ c ᴛᴏ ᴄᴀɴᴄᴇʟ";
 
- for (const ArYan of list) msg += `${index++}/ ${ArYan.name}(${ArYan.threadID})\n`;
-
- if (list.length != 0) return api.sendMessage(getLang("returnListPending", list.length, msg), threadID, (err, info) => {
- global.GoatBot.onReply.set(info.messageID, {
- commandName,
- messageID: info.messageID,
- author: event.senderID,
- pending: list
- })
- }, messageID);
- else return api.sendMessage(getLang("returnListClean"), threadID, messageID);
-}
+			return api.sendMessage(msg, threadID, (error, info) => {
+				global.GoatBot.onReply.set(info.messageID, { commandName: this.config.name, messageID: info.messageID, author: event.senderID, pending: filteredList });
+			}, messageID);
+		} catch {
+			return message.reply("⌀ ꜰᴀɪʟᴇᴅ ᴛᴏ ꜰᴇᴛᴄʜ ʟɪꜱᴛ");
+		}
+	}
 };
