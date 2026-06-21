@@ -3,7 +3,7 @@ const API_ENDPOINT = 'https://metakexbyneokex.fly.dev/chat';
 
 module.exports = {
   config: {
-    name: "ai",
+    name: "minato",
     version: "1",
     role: 0,
     author: "Neoaz 🐦",
@@ -47,7 +47,7 @@ module.exports = {
               }
           });
       } else {
-          await message.reply("AI responded successfully, but the message was empty. Please try again.");
+          await message.reply("minato responded successfully, but the message was empty. Please try again.");
       }
 
     } catch (error) {
@@ -59,7 +59,7 @@ module.exports = {
           errorMsg = "Request timed out. The AI took too long to respond.";
       }
 
-      await message.reply(`❌ AI Command Failed\n\nError: ${errorMsg}`);
+      await message.reply(`❌ minato Command Failed\n\nError: ${errorMsg}`);
     }
   },
 
@@ -109,7 +109,7 @@ module.exports = {
           errorMsg = "Request timed out. The AI took too long to respond.";
       }
 
-      await message.reply(`❌ AI Command Failed\n\nError: ${errorMsg}`);
+      await message.reply(`❌ minato Command Failed\n\nError: ${errorMsg}`);
     }
   }
 };
