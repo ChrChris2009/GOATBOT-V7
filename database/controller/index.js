@@ -24,7 +24,6 @@ function fakeGraphql(query, data, obj = {}) {
 			obj[key] = data.hasOwnProperty(key) ? data[key] : null;
 	}
 	return obj;
-	// i don't know why but it's working by Copilot suggestion :)
 }
 
 module.exports = async function (api) {
@@ -47,7 +46,13 @@ module.exports = async function (api) {
 			process.stderr.clearLine = function () { };
 			spin.start();
 			try {
-				var { threadModel, userModel, dashBoardModel, globalModel } = await require("../connectDB/connectMongoDB.js")(config.database.uriMongodb);
+				const connectMongoDB = require("../connectDB/connectMongoDB.js");
+				var res = await connectMongoDB(config.database.uriMongodb);
+				threadModel = res.threadModel;
+				userModel = res.userModel;
+				dashBoardModel = res.dashBoardModel;
+				globalModel = res.globalModel;
+				
 				spin.stop();
 				process.stderr.clearLine = defaultClearLine;
 				log.info("MONGODB", getText("indexController", "connectMongoDBSuccess"));
@@ -77,7 +82,14 @@ module.exports = async function (api) {
 			process.stderr.clearLine = function () { };
 			spin.start();
 			try {
-				var { threadModel, userModel, dashBoardModel, globalModel, sequelize } = await require("../connectDB/connectSqlite.js")();
+				const connectSqlite = require("../connectDB/connectSqlite.js");
+				var res = await connectSqlite();
+				threadModel = res.threadModel;
+				userModel = res.userModel;
+				dashBoardModel = res.dashBoardModel;
+				globalModel = res.globalModel;
+				sequelize = res.sequelize;
+
 				process.stderr.clearLine = defaultClearLine;
 				spin.stop();
 				log.info("SQLITE", getText("indexController", "connectMySQLSuccess"));
@@ -125,3 +137,4 @@ module.exports = async function (api) {
 		databaseType
 	};
 };
+						
